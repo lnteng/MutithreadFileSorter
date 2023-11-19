@@ -81,6 +81,36 @@ void Sorter::externalSort(const string& inputFileName, const string& outputFileN
     }
 }
 
+void Sorter::mergeSortedFiles(const std::string& inputFile1, const std::string& inputFile2, const std::string& outputFile) {
+    std::ifstream file1(inputFile1, std::ios::binary);
+    std::ifstream file2(inputFile2, std::ios::binary);
+    std::ofstream output(outputFile, std::ios::binary);
+
+    int value1, value2;
+
+    // 将两个排好序的数据归并排序
+    while (file1 >> value1 && file2 >> value2) {
+        if (value1 <= value2) {
+            output.write(reinterpret_cast<char*>(&value1), sizeof(value1));
+        } else {
+            output.write(reinterpret_cast<char*>(&value2), sizeof(value2));
+        }
+    }
+
+    // 多出来的拷贝一下
+    while (file1 >> value1) {
+        output.write(reinterpret_cast<char*>(&value1), sizeof(value1));
+    }
+
+    while (file2 >> value2) {
+        output.write(reinterpret_cast<char*>(&value2), sizeof(value2));
+    }
+
+    file1.close();
+    file2.close();
+    output.close();
+}
+
 bool Sorter::isSortedFile(const string& inputFileName) {
     ifstream inputFile(inputFileName, ios::binary);
     if (!inputFile.is_open()) {
@@ -100,7 +130,6 @@ bool Sorter::isSortedFile(const string& inputFileName) {
         prevValue = currentValue;
     }
 
-    cout << "File is sorted." << endl;
     inputFile.close();
     return true;
 }

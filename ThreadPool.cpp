@@ -1,6 +1,6 @@
 #include "ThreadPool.h"
 
-ThreadPool::ThreadPool(size_t numThreads) : stop(false) {
+ThreadPool::ThreadPool(size_t numThreads) : stop(false), tasksCompleted(0) {
     for (size_t i = 0; i < numThreads; ++i) {
         workers.emplace_back([this]() { this->workerThread(); });
     }
@@ -24,6 +24,11 @@ void ThreadPool::addTask(const function<void()>& task) {
     condition.notify_one();
 }
 
+void ThreadPool::waitForAllTasks() {
+    unique_lock<mutex> lock(queueMutex);
+    condition.wait(lock, [this]() { return tasks.empty() && tasksCompleted == workers.size(); });
+}
+
 void ThreadPool::workerThread() {
     while (true) {
         function<void()> task;
@@ -32,6 +37,7 @@ void ThreadPool::workerThread() {
             condition.wait(lock, [this]() { return stop || !tasks.empty(); });
 
             if (stop && tasks.empty()) {
+                condition.notify_all();
                 return;
             }
 
@@ -39,5 +45,6 @@ void ThreadPool::workerThread() {
             tasks.pop();
         }
         task();
+        ++tasksCompleted; // 已经完成任务的数量
     }
 }

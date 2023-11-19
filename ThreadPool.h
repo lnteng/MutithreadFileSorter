@@ -5,6 +5,7 @@
 #include <functional>
 #include <queue>
 #include <condition_variable>
+using namespace std;
 
 class ThreadPool {
 public:
@@ -13,7 +14,7 @@ public:
     ~ThreadPool();
 
     void addTask(const function<void()>& task);
-
+    void waitForAllTasks();
 private:
     void workerThread();
 
@@ -23,4 +24,5 @@ private:
     mutex queueMutex;
     condition_variable condition;
     bool stop;
+    size_t tasksCompleted;
 };

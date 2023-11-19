@@ -29,7 +29,7 @@ void generateData(const string& fileName, size_t dataSize) {
     outputFile.close();
 }
 
-void listFiles(const char* path, const char* extension) {
+vector<string> listFiles(const char* path, const char* extension = ".bin") {
     DIR* dir = opendir(path);
     vector<string> filenames;
 
@@ -48,10 +48,10 @@ void listFiles(const char* path, const char* extension) {
     } else {
         std::cerr << "Could not open directory: " << path << std::endl;
     }
+    return filenames;
 }
 
-int main() {
-    int n = 100;
+void generateTestData(int n = 100) {
     for (int i = 1; i <= n; i++) {
         ostringstream oss;
         oss << "data/data" << i << ".bin";
@@ -65,6 +65,5 @@ int main() {
         generateData(fileName, dataSize);
 
     }
-    return 0;
 }
 
