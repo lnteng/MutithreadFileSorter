@@ -2,55 +2,27 @@
 #include <vector>
 #include <algorithm>
 #include <fstream>
-#include "ThreadPool.cpp" // Include the ThreadPool class
 
-void sortFile(const std::string& inputFileName, const std::string& outputFileName) {
-    // Read data from the input file
-    std::ifstream inputFile(inputFileName, std::ios::binary);
-    if (!inputFile.is_open()) {
-        std::cerr << "Failed to open input file for reading." << std::endl;
-        return;
-    }
-
-    std::vector<int64_t> data;
-    int64_t value;
-    while (inputFile.read(reinterpret_cast<char*>(&value), sizeof(int64_t))) {
-        data.push_back(value);
-    }
-
-    inputFile.close();
-
-    // Perform sorting
-    std::sort(data.begin(), data.end());
-
-    // Write sorted data to the output file
-    std::ofstream outputFile(outputFileName, std::ios::binary);
-    if (!outputFile.is_open()) {
-        std::cerr << "Failed to open output file for writing." << std::endl;
-        return;
-    }
-
-    for (const auto& val : data) {
-        outputFile.write(reinterpret_cast<const char*>(&val), sizeof(int64_t));
-    }
-
-    outputFile.close();
-}
+#include "ThreadPool.h"
+#include "Sorter.h"
+using namespace std;
 
 int main() {
     ThreadPool threadPool(4); // Number of threads in the pool
 
-    std::vector<std::string> inputFiles = {"data/data_file1.bin", "data/data_file2.bin", "data/data_file3.bin"};
-    std::string outputFileName = "data/sorted_output.bin";
+    vector<string> inputFiles = {"data/data_file1.bin", "data/data_file2.bin", "data/data_file3.bin"};
+    string outputFileName = "data/sorted_output.bin";
 
     for (const auto& inputFileName : inputFiles) {
         threadPool.addTask([inputFileName, outputFileName]() {
-            sortFile(inputFileName, outputFileName);
+            Sor(inputFileName, outputFileName);
         });
     }
 
-    // // Wait for all tasks to complete
-    // threadPool.waitForCompletion();
-
+    // Wait for all tasks to complete
+    threadPool.waitForCompletion();
+    string data1 = "data/data1.bin", data3 = "data/data3.bin";
+    Sorter::externalSort(data1, data3, 1000);
+    printf("%d\n", Sorter::isSortedFile(data3));
     return 0;
 }

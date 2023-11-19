@@ -1,16 +1,25 @@
 #include <iostream>
 #include <fstream>
 #include <random>
+#include <chrono>
+#include <sstream>
+#include <fstream>
+#include <dirent.h>
+#include <cstring>
 
-void generateData(const std::string& fileName, size_t dataSize) {
-    std::ofstream outputFile(fileName, std::ios::binary);
+using namespace std;
+
+
+void generateData(const string& fileName, size_t dataSize) {
+    ofstream outputFile(fileName, ios::binary);
     if (!outputFile.is_open()) {
-        std::cerr << "Failed to open file for writing." << std::endl;
+        cerr << "Failed to open file for writing." << endl;
         return;
     }
 
-    std::default_random_engine generator;
-    std::uniform_int_distribution<int64_t> distribution;
+    unsigned seed = chrono::system_clock::now().time_since_epoch().count();
+    default_random_engine generator(seed);
+    uniform_int_distribution<int64_t> distribution;
 
     for (size_t i = 0; i < dataSize; ++i) {
         int64_t value = distribution(generator);
@@ -20,11 +29,42 @@ void generateData(const std::string& fileName, size_t dataSize) {
     outputFile.close();
 }
 
+void listFiles(const char* path, const char* extension) {
+    DIR* dir = opendir(path);
+    vector<string> filenames;
+
+    if (dir != nullptr) {
+        dirent* entry;
+        while ((entry = readdir(dir)) != nullptr) {
+            // Check if the file has the specified extension
+            if (entry->d_type == DT_REG) { // Regular file
+                const char* fileExtension = strrchr(entry->d_name, '.');
+                if (fileExtension != nullptr && strcmp(fileExtension, extension) == 0) {
+                    filenames.push_back(entry->d_name);
+                }
+            }
+        }
+        closedir(dir);
+    } else {
+        std::cerr << "Could not open directory: " << path << std::endl;
+    }
+}
+
 int main() {
-    std::string fileName = "data/data_file.bin";
-    size_t dataSize = 100000; // Adjust the size as needed
+    int n = 100;
+    for (int i = 1; i <= n; i++) {
+        ostringstream oss;
+        oss << "data/data" << i << ".bin";
+        string fileName = oss.str();
+        
+        random_device rd;
+        mt19937 generator(rd());
+        uniform_int_distribution<size_t> distribution(100000, 5000000);
+        size_t dataSize = distribution(generator); // 随机生成dataSize的大小
 
-    generateData(fileName, dataSize);
+        generateData(fileName, dataSize);
 
+    }
     return 0;
 }
+
